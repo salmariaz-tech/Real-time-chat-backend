@@ -6,21 +6,22 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Allow CORS for all origins temporarily
+// ✅ Enable CORS for all for now (later we can restrict to frontend URL)
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST"],
   credentials: true
 }));
 
-// ✅ Socket.IO Setup
+// ✅ Configure Socket.IO for WebSocket + Polling
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins for now
+    origin: "*", // For production, replace with Vercel/Netlify frontend URL
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["websocket", "polling"], // ✅ Force WebSocket + fallback to polling
+  transports: ["websocket", "polling"], // ✅ Important: Force fallback
+  allowEIO3: true, // ✅ Allow older Engine.IO version compatibility
 });
 
 io.on("connection", (socket) => {
