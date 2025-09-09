@@ -22,13 +22,13 @@ app.use(
 // ✅ Socket.IO Configuration with CORS fix
 const io = new Server(server, {
   cors: {
-    origin: FRONTEND_URL,
+    origin: "https://realtime-chatsystem-frontend.vercel.app",
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
     credentials: true,
   },
-  transports: ["websocket", "polling"], // ✅ Fallback included
+  transports: ["polling"], // ✅ Force polling instead of WebSocket
 });
+
 
 // ✅ Socket.IO Events
 io.on("connection", (socket) => {
@@ -64,3 +64,4 @@ const PORT = process.env.PORT || 5050;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
