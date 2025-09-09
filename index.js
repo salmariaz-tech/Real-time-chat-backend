@@ -6,56 +6,57 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Enable CORS for all for now (later we can restrict to frontend URL)
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST"],
   credentials: true
 }));
 
-// ✅ Configure Socket.IO for WebSocket + Polling
+// ✅ Configure Socket.IO properly
 const io = new Server(server, {
   cors: {
-    origin: "*", // For production, replace with Vercel/Netlify frontend URL
+    origin: "*",  // For production, replace "*" with your Vercel frontend URL
     methods: ["GET", "POST"],
-    credentials: true,
+    credentials: true
   },
-  transports: ["websocket", "polling"], // ✅ Important: Force fallback
-  allowEIO3: true, // ✅ Allow older Engine.IO version compatibility
+  transports: ["polling", "websocket"], // ✅ Add polling first, then websocket
+  allowEIO3: true                      // ✅ Fix Engine.IO mismatch
 });
 
+// ✅ Handle socket connections
 io.on("connection", (socket) => {
-  console.log("✅ User connected:", socket.id);
+  console.log("✅ New client connected:", socket.id);
 
-  // Join room
+  // Join a room
   socket.on("join", (roomId) => {
     socket.join(roomId);
-    console.log(`📌 User ${socket.id} joined room ${roomId}`);
+    console.log(`📌 ${socket.id} joined ${roomId}`);
   });
 
-  // Leave room
+  // Leave a room
   socket.on("leave", (roomId) => {
     socket.leave(roomId);
-    console.log(`👋 User ${socket.id} left room ${roomId}`);
+    console.log(`👋 ${socket.id} left ${roomId}`);
   });
 
-  // Send message
-  socket.on("send", (message) => {
-    console.log("📩 Message:", message);
-    socket.to(message.room).emit("message", message);
+  // Send a message
+  socket.on("send", (data) => {
+    console.log("📩 Message:", data);
+    socket.to(data.room).emit("message", data);
   });
 
-  // Disconnect
+  // Disconnect event
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
   });
 });
 
+// ✅ Root route for testing
 app.get("/", (req, res) => {
-  res.send("<h1>✅ Real-Time Chat Backend Running</h1>");
+  res.send("✅ Real-Time Chat Backend is Running 🚀");
 });
 
 const PORT = process.env.PORT || 5050;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
