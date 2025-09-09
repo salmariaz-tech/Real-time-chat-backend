@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://real-time-chat-backend-production-f1c0.up.railway.app/",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -35,3 +35,4 @@ app.get("/", (req, res) => {
 server.listen(5050, () => {
   console.log("listening on *:5050");
 });
+
