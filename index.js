@@ -6,62 +6,60 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
-// ✅ Allowed frontend URL (Vercel)
+// ✅ Vercel frontend ka URL
 const FRONTEND_URL = "https://realtime-chatsystem-frontend.vercel.app";
 
-// ✅ Enable CORS for API routes
+// ✅ Normal API requests ke liye CORS enable
 app.use(
   cors({
     origin: FRONTEND_URL,
     methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
     credentials: true,
   })
 );
 
-// ✅ Configure Socket.IO with proper CORS
+// ✅ Socket.IO Configuration with CORS fix
 const io = new Server(server, {
   cors: {
     origin: FRONTEND_URL,
     methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
     credentials: true,
   },
-  transports: ["polling", "websocket"], // ✅ Fallback added
-  allowEIO3: true,
+  transports: ["websocket", "polling"], // ✅ Fallback included
 });
 
-// ✅ Socket.IO connection events
+// ✅ Socket.IO Events
 io.on("connection", (socket) => {
-  console.log("✅ New client connected:", socket.id);
+  console.log("✅ User connected:", socket.id);
 
-  // Join room
-  socket.on("join", (roomId) => {
-    socket.join(roomId);
-    console.log(`📌 ${socket.id} joined ${roomId}`);
+  socket.on("join", (room) => {
+    socket.join(room);
+    console.log(`📌 ${socket.id} joined room ${room}`);
   });
 
-  // Leave room
-  socket.on("leave", (roomId) => {
-    socket.leave(roomId);
-    console.log(`👋 ${socket.id} left ${roomId}`);
+  socket.on("leave", (room) => {
+    socket.leave(room);
+    console.log(`👋 ${socket.id} left room ${room}`);
   });
 
-  // Send message
   socket.on("send", (data) => {
-    console.log("📩 Message:", data);
+    console.log("📩 Message received:", data);
     socket.to(data.room).emit("message", data);
   });
 
-  // Disconnect
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
   });
 });
 
-// ✅ Root endpoint for testing
+// ✅ Test Route
 app.get("/", (req, res) => {
-  res.send("✅ Real-Time Chat Backend is Running 🚀");
+  res.send("🚀 Real-Time Chat Backend Running Successfully!");
 });
 
+// ✅ Start Server
 const PORT = process.env.PORT || 5050;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
