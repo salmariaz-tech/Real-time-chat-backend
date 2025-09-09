@@ -1,67 +1,60 @@
 import express from "express";
 import http from "http";
-import cors from "cors";
 import { Server } from "socket.io";
+import cors from "cors";
 
 const app = express();
-const server = http.createServer(app);
 
-// ✅ Vercel frontend ka URL
-const FRONTEND_URL = "https://realtime-chatsystem-frontend.vercel.app";
-
-// ✅ Normal API requests ke liye CORS enable
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: "https://realtime-chatsystem-frontend.vercel.app", // ✅ Vercel frontend URL
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
     credentials: true,
   })
 );
 
-// ✅ Socket.IO Configuration with CORS fix
+const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: "https://realtime-chatsystem-frontend.vercel.app",
+    origin: "https://realtime-chatsystem-frontend.vercel.app", // ✅ Allow frontend
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["polling"], // ✅ Force polling instead of WebSocket
+  transports: ["websocket", "polling"], // ✅ Hybrid: Try WebSocket first, fallback to polling
 });
 
-
-// ✅ Socket.IO Events
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.id);
 
-  socket.on("join", (room) => {
-    socket.join(room);
-    console.log(`📌 ${socket.id} joined room ${room}`);
+  // Join room
+  socket.on("join", (roomId) => {
+    socket.join(roomId);
+    console.log(`📌 User joined room: ${roomId}`);
   });
 
-  socket.on("leave", (room) => {
-    socket.leave(room);
-    console.log(`👋 ${socket.id} left room ${room}`);
+  // Leave room
+  socket.on("leave", (roomId) => {
+    socket.leave(roomId);
+    console.log(`❌ User left room: ${roomId}`);
   });
 
-  socket.on("send", (data) => {
-    console.log("📩 Message received:", data);
-    socket.to(data.room).emit("message", data);
+  // Send message
+  socket.on("send", (message) => {
+    console.log("📨 Message:", message);
+    socket.to(message.room).emit("message", message);
   });
 
+  // Disconnect
   socket.on("disconnect", () => {
-    console.log("❌ User disconnected:", socket.id);
+    console.log("🔌 User disconnected:", socket.id);
   });
 });
 
-// ✅ Test Route
 app.get("/", (req, res) => {
-  res.send("🚀 Real-Time Chat Backend Running Successfully!");
+  res.send("<h1>🚀 Realtime Chat Server Running...</h1>");
 });
 
-// ✅ Start Server
-const PORT = process.env.PORT || 5050;
-server.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+server.listen(5050, () => {
+  console.log("✅ Server running on http://localhost:5050");
 });
-
