@@ -6,57 +6,63 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  credentials: true
-}));
+// ✅ Allowed frontend URL (Vercel)
+const FRONTEND_URL = "https://realtime-chatsystem-frontend.vercel.app";
 
-// ✅ Configure Socket.IO properly
+// ✅ Enable CORS for API routes
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
+
+// ✅ Configure Socket.IO with proper CORS
 const io = new Server(server, {
   cors: {
-    origin: "*",  // For production, replace "*" with your Vercel frontend URL
+    origin: FRONTEND_URL,
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: true,
   },
-  transports: ["polling", "websocket"], // ✅ Add polling first, then websocket
-  allowEIO3: true                      // ✅ Fix Engine.IO mismatch
+  transports: ["polling", "websocket"], // ✅ Fallback added
+  allowEIO3: true,
 });
 
-// ✅ Handle socket connections
+// ✅ Socket.IO connection events
 io.on("connection", (socket) => {
   console.log("✅ New client connected:", socket.id);
 
-  // Join a room
+  // Join room
   socket.on("join", (roomId) => {
     socket.join(roomId);
     console.log(`📌 ${socket.id} joined ${roomId}`);
   });
 
-  // Leave a room
+  // Leave room
   socket.on("leave", (roomId) => {
     socket.leave(roomId);
     console.log(`👋 ${socket.id} left ${roomId}`);
   });
 
-  // Send a message
+  // Send message
   socket.on("send", (data) => {
     console.log("📩 Message:", data);
     socket.to(data.room).emit("message", data);
   });
 
-  // Disconnect event
+  // Disconnect
   socket.on("disconnect", () => {
     console.log("❌ User disconnected:", socket.id);
   });
 });
 
-// ✅ Root route for testing
+// ✅ Root endpoint for testing
 app.get("/", (req, res) => {
   res.send("✅ Real-Time Chat Backend is Running 🚀");
 });
 
 const PORT = process.env.PORT || 5050;
 server.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
